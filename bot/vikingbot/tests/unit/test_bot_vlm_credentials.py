@@ -325,7 +325,7 @@ def test_bot_credentials_override_or_inherit_agent_max_tokens(tmp_path, monkeypa
     assert [vlm.max_tokens for vlm in provider._vlm._vlm_instances] == [2048, 8192]
 
 
-def test_explicit_litellm_provider_uses_vlm_adapter(tmp_path, monkeypatch):
+def test_explicit_litellm_provider_is_retired(tmp_path, monkeypatch):
     config = _write_config(
         tmp_path,
         monkeypatch,

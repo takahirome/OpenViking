@@ -317,6 +317,8 @@ def _make_provider(config, langfuse_client: Any = None):
     api_key = p.api_key if p else None
     api_base = p.api_base if p else None
     provider_name = p.provider if p else None
+    if provider_name and provider_name.lower() == "litellm":
+        raise ValueError("LiteLLM support was retired; configure a supported direct provider.")
     extra_headers = p.extra_headers if p else {}
     timeout = p.timeout if p else None
     max_tokens = getattr(p, "max_tokens", None) if p else None
