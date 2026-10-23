@@ -1,5 +1,7 @@
 <div align="center">
 
+> Local retirement (2026-10-23): LiteLLM is no longer installed or supported. Legacy LiteLLM adapters fail explicitly; select a supported direct provider.
+
 <a href="https://openviking.ai/" target="_blank">
   <picture>
     <img alt="OpenViking" src="docs/images/ov-logo.png" width="200px" height="auto">

@@ -737,7 +737,7 @@ class EmbeddingConfig(BaseModel):
         )
 
         if provider == "litellm" and LiteLLMDenseEmbedder is None:
-            raise ValueError("LiteLLM is not installed. Install it with: pip install litellm")
+            raise ValueError("LiteLLM support was retired; configure a supported direct embedding provider.")
 
         # Factory registry: (provider, type) -> (embedder_class, param_builder)
         runtime_config = {

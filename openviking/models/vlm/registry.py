@@ -12,7 +12,6 @@ VALID_PROVIDERS: tuple[str, ...] = (
     "azure",
     "kimi",
     "glm",
-    "litellm",
     "openai-codex",
 )
 
