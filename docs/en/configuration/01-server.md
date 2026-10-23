@@ -140,8 +140,8 @@ Changing the model or `dimension` can make existing vector collections incompati
 
 | Field | Type / values | Default | Purpose |
 |---|---|---|---|
-| `provider` | `vikingdb`, `cohere`, `openai`, `litellm` / `null` | `null` | Rerank service; inferred from credentials when omitted |
-| `model` | string / `null` | `null` | OpenAI-compatible or LiteLLM rerank model |
+| `provider` | `vikingdb`, `cohere`, `openai` / `null` | `null` | Rerank service; inferred from credentials when omitted |
+| `model` | string / `null` | `null` | OpenAI-compatible rerank model |
 | `threshold` | number | `0.1` | Minimum score considered relevant |
 | `max_input_tokens` | integer; `0` or `>= 128` | `0` | Maximum estimated tokens per query-document pair; `0` disables truncation |
 

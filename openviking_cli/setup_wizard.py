@@ -861,40 +861,35 @@ def _ollama_dense_config(embedding: EmbeddingPreset) -> dict[str, Any]:
 
 
 def _ollama_vlm_config(vlm: VLMPreset) -> dict[str, Any]:
-    """Build the VLM config block for an Ollama-served model.
+    """Connect directly to Ollama's OpenAI-compatible endpoint.
 
-    ``extra_request_body`` raises Ollama's context window past its 4096-token
-    default (OV's memory-extraction prompt alone is ~5k tokens, so the default
-    silently truncates the conversation) and disables thinking, which otherwise
-    makes thinking models emit only reasoning and stall.
+    Configure the context window in Ollama's model settings; the OpenAI API
+    does not expose the native num_ctx option.
     """
     return {
-        "provider": "litellm",
-        "model": vlm.litellm_model,
+        "provider": "openai",
+        "model": vlm.litellm_model.removeprefix("ollama/"),
         "api_key": "no-key",
-        "api_base": "http://localhost:11434",
+        "api_base": "http://localhost:11434/v1",
         "temperature": 0.0,
         "max_retries": 2,
-        "extra_request_body": {"num_ctx": 16384, "think": False},
+        "extra_request_body": {"think": False},
     }
 
 
-def _build_query_planner_config(preset: QueryPlannerPreset) -> dict[str, Any]:
-    """Build the ``query_planner`` config block for an Ollama-served model.
 
-    Uses the litellm provider with the bare Ollama base URL (no ``/v1``) to
-    match how the wizard configures the Ollama VLM, and disables thinking for
-    lower latency on the small planner model.
-    """
+def _build_query_planner_config(preset: QueryPlannerPreset) -> dict[str, Any]:
+    """Build a direct Ollama OpenAI-compatible query planner configuration."""
     return {
-        "provider": "litellm",
-        "model": preset.litellm_model,
+        "provider": "openai",
+        "model": preset.litellm_model.removeprefix("ollama/"),
         "api_key": "no-key",
-        "api_base": "http://localhost:11434",
+        "api_base": "http://localhost:11434/v1",
         "temperature": 0.0,
         "timeout": 60,
         "extra_request_body": {"think": False},
     }
+
 
 
 # ---------------------------------------------------------------------------
@@ -1096,6 +1091,8 @@ def _vlm_option_index_for(current: dict[str, Any]) -> int:
     if provider == "glm":
         return 6
     if provider == "litellm" and model.startswith("ollama/"):
+        return _WIZARD_VLM_OLLAMA_CHOICE
+    if provider == "openai" and "localhost:11434" in api_base:
         return _WIZARD_VLM_OLLAMA_CHOICE
     if provider == "openai":
         return 3 if "api.openai.com" in api_base else 7

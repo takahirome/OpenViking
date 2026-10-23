@@ -350,6 +350,8 @@ def check_vlm() -> tuple[bool, str, Optional[str]]:
         return False, "Cannot check (config unreadable)", None
 
     raw_vlm = data.get("vlm", {})
+    if raw_vlm.get("provider") == "litellm":
+        return False, "LiteLLM support was retired", "Configure a supported direct VLM provider"
     normalized_vlm = VLMConfig.sync_provider_backend(dict(raw_vlm))
     vlm = VLMConfig.model_construct(**normalized_vlm)
     _, provider = vlm.get_provider_config()
@@ -381,10 +383,6 @@ def check_vlm() -> tuple[bool, str, Optional[str]]:
                 f"Or bootstrap once from {bootstrap_path} into {store_path}",
             )
 
-    # Ollama via LiteLLM doesn't need a real API key
-    if provider == "litellm" and model.startswith("ollama/"):
-        return True, f"{provider}/{model}", None
-
     api_key = vlm._get_effective_api_key()
     if not api_key or api_key.startswith("{"):
         return (
@@ -411,10 +409,10 @@ def check_ollama() -> tuple[bool, str, Optional[str]]:
     vlm = data.get("vlm", {})
     query_planner = data.get("query_planner") or {}
     uses_embedding = dense.get("provider") == "ollama"
-    uses_vlm = vlm.get("provider") == "litellm" and (vlm.get("model", "")).startswith("ollama/")
-    uses_query_planner = query_planner.get("provider") == "litellm" and (
-        query_planner.get("model", "")
-    ).startswith("ollama/")
+    if any(c.get("provider") == "litellm" for c in (vlm, query_planner)):
+        return False, "LiteLLM support was retired", "Configure a direct Ollama OpenAI-compatible endpoint"
+    uses_vlm = vlm.get("provider") == "openai" and ":11434" in str(vlm.get("api_base", ""))
+    uses_query_planner = query_planner.get("provider") == "openai" and ":11434" in str(query_planner.get("api_base", ""))
 
     if not uses_embedding and not uses_vlm and not uses_query_planner:
         return True, "not configured", None

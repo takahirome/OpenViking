@@ -1,4 +1,8 @@
+> LiteLLM 支持已移除（2026-10-23）。旧 LiteLLM 配置不可恢复；请使用受支持的直接提供商。Ollama 向导使用 OpenAI 兼容端点 `/v1`，上下文窗口需在 Ollama 模型中配置。
+
 # 配置
+
+当前 doctor 自动识别默认端口 `11434` 的 OpenAI 兼容 Ollama 端点。使用自定义端口时需单独验证连接；模型上下文窗口在 Ollama 模型设置中配置。
 
 OpenViking 使用 JSON 配置文件（`ov.conf`）进行设置。配置文件支持 Embedding、VLM、Rerank、存储、解析器等多个模块的配置。
 
@@ -216,7 +220,7 @@ openviking-server doctor
 | `max_retries` | int | Embedding provider 瞬时错误的最大重试次数（`embedding.max_retries`，默认：`3`；`0` 表示禁用重试） |
 | `text_source` | str | 文本文件向量化时使用的文本来源。`content_only` 读取原文内容；`summary_first` 优先使用摘要，没有摘要时回退到原文；`summary_only` 只使用摘要。默认：`content_only` |
 | `max_input_tokens` | int | 使用原文内容向量化时，发送给 embedding 模型的最大估算 token 数。默认：`4096` |
-| `provider` | str | `"openai"`、`"azure"`、`"volcengine"`、`"vikingdb"`、`"jina"`、`"ollama"`、`"gemini"`、`"voyage"`、`"dashscope"`、`"minimax"`、`"cohere"`、`"litellm"` 或 `"local"` |
+| `provider` | str | `"openai"`、`"azure"`、`"volcengine"`、`"vikingdb"`、`"jina"`、`"ollama"`、`"gemini"`、`"voyage"`、`"dashscope"`、`"minimax"`、`"cohere"` 或 `"local"` |
 | `api_key` | str | API Key |
 | `model` | str | 模型名称 |
 | `dimension` | int | 向量维度 |
@@ -270,7 +274,6 @@ openviking-server doctor
 - `cohere`: Cohere Embedding API
 - `gemini`: Google Gemini Embedding API（仅文本；需安装 `google-genai>=1.0.0`）
 - `dashscope`: DashScope（阿里通义）Embedding API
-- `litellm`: LiteLLM Embedding API
 - `local`: 本地 GGUF embedding 模型
 
 **OpenAI 兼容 provider 的 JSON float embedding 示例:**
@@ -595,8 +598,7 @@ provider，并设置 `storage.vectordb.sparse_weight > 0`。自托管模型的�
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `api_key` | str | API Key。`openai-codex` 在 Codex OAuth 可用时可省略；使用 provider 原生凭据的 `litellm` 路由也可省略 |
-| `forward_api_key` | bool | 仅 LiteLLM 使用。覆盖是否把 `api_key` 透传给 LiteLLM。默认情况下，OpenViking 不会把占位 key 透传给 `bedrock/`、`sagemaker/`、`vertex_ai/` 等 AWS/GCP 原生鉴权路由；如果明确使用 LiteLLM 的 Bedrock bearer-token API-key 鉴权，可设为 `true` |
+| `api_key` | str | API Key。`openai-codex` 在 Codex OAuth 可用时可省略 |
 | `model` | str | 模型名称 |
 | `api_base` | str | API 端点（可选） |
 | `thinking` | bool | 启用思考模式（仅对部分火山模型生效，默认：`false`） |
@@ -606,7 +608,7 @@ provider，并设置 `storage.vectordb.sparse_weight > 0`。自托管模型的�
 | `failback_timeout_seconds` | float | 切换到低优先级 credential 后，尝试逐级切回的时间阈值（默认：`600`） |
 | `failback_request_count` | int | 低优先级 credential 成功处理多少次请求后尝试逐级切回（默认：`50`） |
 | `backup` | object | 可选的备用 VLM 配置（结构与 `vlm` 相同），当主 VLM 遇到限流、`5xx`、超时或连接失败等可重试错误时自动切换。仅支持 1 层备用 &mdash; 备用 VLM 本身不能再嵌套 `backup` |
-| `timeout` | float | 单次 VLM API 请求的 HTTP 超时时间（秒），传递给底层 OpenAI/LiteLLM 客户端。慢端点（如 DashScope、本地推理）可调大。必须 `> 0`（默认：`600.0`） |
+| `timeout` | float | 单次 VLM API 请求的 HTTP 超时时间（秒），传递给底层 OpenAI 客户端。慢端点（如 DashScope、本地推理）可调大。必须 `> 0`（默认：`600.0`） |
 | `extra_headers` | object | 兼容 HTTP provider 的自定义请求头。`kimi` 默认已注入所需订阅请求头，也支持在这里覆盖或扩展 |
 | `extra_request_body` | object | 传给 OpenAI 兼容 completion 请求的额外 JSON body 字段，可用于 Ollama `{"think": false}` 等 provider 专有参数 |
 | `stream` | bool | 启用流式模式（OpenAI 兼容 provider 可用，默认：`false`） |
@@ -639,33 +641,8 @@ provider，并设置 `storage.vectordb.sparse_weight > 0`。自托管模型的�
 - `openai-codex`：通过 ChatGPT/Codex OAuth 使用 Codex VLM
 - `kimi`：Kimi Coding 订阅端点，内置 provider 默认配置
 - `glm`：Z.AI GLM Coding Plan 端点，使用 OpenAI 兼容请求格式
-- `litellm`：LiteLLM VLM API，支持 `bedrock/`、`sagemaker/`、`vertex_ai/`、`azure/` 等显式 LiteLLM 路由
 
 对于 `openai-codex`，请通过 `openviking-server init` 完成鉴权，再使用 `openviking-server doctor` 做校验。
-
-对于 `litellm`，当底层路由使用环境变量或 provider 原生凭据时可以省略
-`api_key`，例如 Bedrock/SageMaker 的 AWS IAM/IRSA，或 Vertex AI 的
-ADC/service-account 凭据。Azure 路由仍会正常使用 `api_key`。如果明确要使用
-LiteLLM 的 Bedrock bearer-token API-key 鉴权，请设置 `forward_api_key=true`。
-
-**自定义 HTTP Headers**
-
-对于 OpenAI 兼容的 provider（如 OpenRouter），可以通过 `extra_headers` 添加自定义 HTTP 请求头：
-
-```json
-{
-  "vlm": {
-    "provider": "openai",
-    "api_key": "your-api-key",
-    "model": "gpt-4o",
-    "api_base": "https://openrouter.ai/api/v1",
-    "extra_headers": {
-      "HTTP-Referer": "https://your-site.com",
-      "X-Title": "Your App Name"
-    }
-  }
-}
-```
 
 常见使用场景：
 - **OpenRouter**: 需要 `HTTP-Referer` 和 `X-Title` 来标识应用
@@ -675,15 +652,15 @@ LiteLLM 的 Bedrock bearer-token API-key 鉴权，请设置 `forward_api_key=tru
 
 **自定义请求 Body**
 
-对于接受 provider 专有 JSON body 字段的 OpenAI 兼容 provider，可以通过 `extra_request_body` 配置。OpenViking 会把这些字段合并到 OpenAI SDK 或 LiteLLM 发送的 `extra_body` 中：
+对于接受 provider 专有 JSON body 字段的 OpenAI 兼容 provider，可以通过 `extra_request_body` 配置。OpenViking 会把这些字段合并到 OpenAI SDK 发送的 `extra_body` 中：
 
 ```json
 {
   "vlm": {
-    "provider": "litellm",
+    "provider": "openai",
     "api_key": "ollama",
-    "model": "ollama/llama3.1",
-    "api_base": "http://127.0.0.1:11434",
+    "model": "llama3.1",
+    "api_base": "http://127.0.0.1:11434/v1",
     "extra_request_body": {
       "think": false
     }
@@ -774,9 +751,9 @@ ollama pull guoxuter/ov_intent_analysis_sft:v7_q8
 ```json
 {
   "query_planner": {
-    "provider": "litellm",
-    "model": "ollama/guoxuter/ov_intent_analysis_sft:v7_q8",
-    "api_base": "http://127.0.0.1:11434",
+    "provider": "openai",
+    "model": "guoxuter/ov_intent_analysis_sft:v7_q8",
+    "api_base": "http://127.0.0.1:11434/v1",
     "temperature": 0.0,
     "timeout": 60,
     "extra_request_body": {

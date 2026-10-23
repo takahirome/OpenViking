@@ -6,7 +6,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from openviking.models.vlm.backends.litellm_vlm import LiteLLMVLMProvider
 from openviking.models.vlm.backends.openai_vlm import OpenAIVLM
 from openviking.models.vlm.backends.volcengine_vlm import VolcEngineVLM
 from openviking.models.vlm.base import VLMBase, VLMResponse
@@ -66,10 +65,9 @@ class TestVLMBaseResponseFormats:
     ("vlm_type", "config"),
     [
         (OpenAIVLM, {"provider": "openai", "model": "gpt-5.6-terra"}),
-        (LiteLLMVLMProvider, {"provider": "litellm", "model": "gpt-5.6-terra"}),
         (VolcEngineVLM, {"provider": "volcengine", "model": "test-model"}),
     ],
-    ids=["openai", "litellm", "volcengine"],
+    ids=["openai", "volcengine"],
 )
 def test_build_vlm_response_from_str_with_tools(vlm_type, config):
     vlm = vlm_type(config)

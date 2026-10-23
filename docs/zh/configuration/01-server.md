@@ -1,3 +1,5 @@
+> LiteLLM 支持已移除（2026-10-23）。旧 LiteLLM 配置不可恢复；请使用受支持的直接提供商。Ollama 向导使用 OpenAI 兼容端点 `/v1`，上下文窗口需在 Ollama 模型中配置。
+
 # 服务端配置
 
 首次配置建议使用 `openviking-server init`，保存后运行 `openviking-server doctor`。
@@ -140,8 +142,8 @@ API 型 `embedding`、`vlm`、`query_planner` 和 `rerank` 配置会复用部分
 
 | 字段 | 类型 / 可选值 | 默认值 | 作用 |
 |---|---|---|---|
-| `provider` | `vikingdb`、`cohere`、`openai`、`litellm` / `null` | `null` | Rerank 服务类型；省略时根据凭证字段推断 |
-| `model` | string / `null` | `null` | OpenAI 兼容或 LiteLLM Rerank 模型 |
+| `provider` | `vikingdb`、`cohere`、`openai` / `null` | `null` | Rerank 服务类型；省略时根据凭证字段推断 |
+| `model` | string / `null` | `null` | OpenAI 兼容 Rerank 模型 |
 | `threshold` | number | `0.1` | 判定结果相关的最低分数 |
 | `max_input_tokens` | integer；`0` 或 `>= 128` | `0` | 每个 query-document pair 的最大估算 token；`0` 表示不截断 |
 

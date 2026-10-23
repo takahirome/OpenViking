@@ -1,5 +1,7 @@
 # Configuration
 
+The direct Ollama wizard uses its OpenAI-compatible `/v1` endpoint. Configure the context window in Ollama model settings. The current doctor auto-detection covers the default port `11434`; verify a custom-port OpenAI-compatible Ollama endpoint separately.
+
 OpenViking uses a JSON configuration file (`~/.openviking/ov.conf`) for settings.
 
 For a first-time setup, the recommended flow is:
@@ -214,7 +216,7 @@ Embedding model configuration for vector search, supporting dense, sparse, and h
 | `max_retries` | int | Maximum retry attempts for transient embedding provider errors (`embedding.max_retries`, default: `3`; `0` disables retry) |
 | `text_source` | str | Text used for vectorizing text files. `content_only` reads raw content, `summary_first` uses summary when available and falls back to content, `summary_only` uses only summary. Default: `content_only` |
 | `max_input_tokens` | int | Maximum estimated raw text tokens sent to the embedding model when content is used. Default: `4096` |
-| `provider` | str | `"openai"`, `"azure"`, `"volcengine"`, `"vikingdb"`, `"jina"`, `"ollama"`, `"gemini"`, `"voyage"`, `"dashscope"`, `"minimax"`, `"cohere"`, `"litellm"`, or `"local"` |
+| `provider` | str | `"openai"`, `"azure"`, `"volcengine"`, `"vikingdb"`, `"jina"`, `"ollama"`, `"gemini"`, `"voyage"`, `"dashscope"`, `"minimax"`, `"cohere"`, or `"local"` |
 | `api_key` | str | API key |
 | `model` | str | Model name |
 | `dimension` | int | Vector dimension. For Voyage, this maps to `output_dimension` |
@@ -268,7 +270,6 @@ With `input: "multimodal"`, OpenViking can embed text, images (PNG, JPG, etc.), 
 - `cohere`: Cohere Embedding API
 - `gemini`: Google Gemini Embedding API (text-only; requires `google-genai>=1.0.0`)
 - `dashscope`: DashScope (Alibaba Tongyi) Embedding API
-- `litellm`: LiteLLM Embedding API
 - `local`: Local GGUF embedding models
 
 **OpenAI-compatible provider example with JSON float embeddings:**
@@ -626,8 +627,7 @@ Vision Language Model for semantic extraction (L0/L1 generation).
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `api_key` | str | API key. Optional for `openai-codex` when Codex OAuth is available, and optional for `litellm` routes that use provider-native credentials |
-| `forward_api_key` | bool | LiteLLM only. Overrides whether `api_key` is forwarded to LiteLLM. By default, OpenViking does not forward placeholder keys for native AWS/GCP routes such as `bedrock/`, `sagemaker/`, and `vertex_ai/`; set to `true` when intentionally using a LiteLLM API-key route such as Bedrock bearer-token auth |
+| `api_key` | str | API key. Optional for `openai-codex` when Codex OAuth is available |
 | `model` | str | Model name |
 | `api_base` | str | API endpoint (optional) |
 | `thinking` | bool | Enable thinking mode for VolcEngine models (default: `false`) |
@@ -637,7 +637,7 @@ Vision Language Model for semantic extraction (L0/L1 generation).
 | `failback_timeout_seconds` | float | Time threshold for attempting a step back toward a higher-priority credential after failover (default: `600`) |
 | `failback_request_count` | int | Successful requests on a lower-priority credential before attempting a step back (default: `50`) |
 | `backup` | object | Optional backup VLM configuration (same shape as `vlm`) for automatic failover when the primary fails with retryable errors such as rate limits, `5xx` responses, or connection/timeout failures. Only one level of failover is supported &mdash; the backup itself cannot define a nested `backup` |
-| `timeout` | float | Per-request HTTP timeout in seconds passed to the underlying OpenAI/LiteLLM client. Increase for slow endpoints (e.g., DashScope, local inference). Must be `> 0` (default: `600.0`) |
+| `timeout` | float | Per-request HTTP timeout in seconds passed to the underlying OpenAI-compatible client. Increase for slow endpoints (e.g., DashScope, local inference). Must be `> 0` (default: `600.0`) |
 | `extra_headers` | object | Custom HTTP headers for compatible HTTP providers. `kimi` also accepts header overrides, but already injects the required subscription headers by default |
 | `extra_request_body` | object | Extra JSON body fields for OpenAI-compatible completion requests, useful for provider-specific options such as Ollama `{"think": false}` |
 | `stream` | bool | Enable streaming mode (for OpenAI-compatible providers, default: `false`) |
@@ -670,15 +670,10 @@ If VLM is not configured, L0/L1 will be generated from content directly (less se
 - `openai-codex`: Codex VLM via ChatGPT/Codex OAuth
 - `kimi`: Kimi Coding subscription endpoint with built-in provider defaults
 - `glm`: Z.AI GLM Coding Plan endpoint with OpenAI-compatible requests
-- `litellm`: LiteLLM VLM API, including explicit LiteLLM routes such as `bedrock/`, `sagemaker/`, `vertex_ai/`, and `azure/`
 
 For `openai-codex`, authenticate through `openviking-server init`, then verify with `openviking-server doctor`.
 
-For `litellm`, `api_key` can be omitted when the underlying route authenticates through
-environment or provider-native credentials, such as AWS IAM/IRSA for Bedrock and
-SageMaker or ADC/service-account credentials for Vertex AI. Azure routes still use
-`api_key` normally. If you intentionally use LiteLLM's Bedrock bearer-token API-key
-auth, set `forward_api_key` to `true`.
+LiteLLM was retired on 2026-10-23. Its adapters, key-forwarding settings, and provider-native authentication routes are unsupported.
 
 **Custom HTTP Headers**
 
@@ -707,15 +702,15 @@ Common use cases:
 
 **Custom Request Body**
 
-For OpenAI-compatible providers that accept provider-specific JSON body fields, add them via `extra_request_body`. OpenViking merges these fields into the `extra_body` sent by the OpenAI SDK or LiteLLM:
+For OpenAI-compatible providers that accept provider-specific JSON body fields, add them via `extra_request_body`. OpenViking merges these fields into the `extra_body` sent by the OpenAI SDK:
 
 ```json
 {
   "vlm": {
-    "provider": "litellm",
+    "provider": "openai",
     "api_key": "ollama",
-    "model": "ollama/llama3.1",
-    "api_base": "http://127.0.0.1:11434",
+    "model": "llama3.1",
+    "api_base": "http://127.0.0.1:11434/v1",
     "extra_request_body": {
       "think": false
     }
@@ -806,9 +801,10 @@ Then add the following to your OpenViking configuration:
 ```json
 {
   "query_planner": {
-    "provider": "litellm",
-    "model": "ollama/guoxuter/ov_intent_analysis_sft:v7_q8",
-    "api_base": "http://127.0.0.1:11434",
+    "provider": "openai",
+    "api_key": "ollama",
+    "model": "guoxuter/ov_intent_analysis_sft:v7_q8",
+    "api_base": "http://127.0.0.1:11434/v1",
     "temperature": 0.0,
     "timeout": 60,
     "extra_request_body": {
