@@ -439,7 +439,7 @@ def _make_provider(config, langfuse_client: Any = None):
     raise RuntimeError(
         "No VLM provider configured for VikingBot. Set bot.agents.provider, "
         "configure bot.agents.credentials, or inherit the root vlm configuration. "
-        "Set provider to 'litellm' to use LiteLLM."
+        "Use a supported direct VLM provider; LiteLLM support is retired."
     )
 
 

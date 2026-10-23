@@ -638,9 +638,9 @@ class TestCheckOllama:
             json.dumps(
                 {
                     "vlm": {
-                        "provider": "litellm",
-                        "model": "ollama/llava",
-                        "api_base": "http://vlm-host:11436/v1",
+                        "provider": "openai",
+                        "model": "llava",
+                        "api_base": "http://vlm-host:11434/v1",
                     }
                 }
             )
@@ -650,9 +650,9 @@ class TestCheckOllama:
                 "openviking_cli.utils.ollama.check_ollama_running", return_value=True
             ) as running:
                 ok, detail, fix = check_ollama()
-        running.assert_called_once_with("vlm-host", 11436)
+        running.assert_called_once_with("vlm-host", 11434)
         assert ok
-        assert "vlm-host:11436" in detail
+        assert "vlm-host:11434" in detail
         assert fix is None
 
     def test_checks_query_planner_ollama_api_base(self, tmp_path: Path):
@@ -665,9 +665,9 @@ class TestCheckOllama:
                     },
                     "vlm": {"provider": "openai", "model": "gpt-4o-mini"},
                     "query_planner": {
-                        "provider": "litellm",
-                        "model": "ollama/guoxuter/ov_intent_analysis_sft:v4_q8",
-                        "api_base": "http://planner-host:11437",
+                        "provider": "openai",
+                        "model": "guoxuter/ov_intent_analysis_sft:v4_q8",
+                        "api_base": "http://planner-host:11434/v1",
                     },
                 }
             )
@@ -677,9 +677,9 @@ class TestCheckOllama:
                 "openviking_cli.utils.ollama.check_ollama_running", return_value=True
             ) as running:
                 ok, detail, fix = check_ollama()
-        running.assert_called_once_with("planner-host", 11437)
+        running.assert_called_once_with("planner-host", 11434)
         assert ok
-        assert "planner-host:11437" in detail
+        assert "planner-host:11434" in detail
         assert fix is None
 
     def test_fails_when_query_planner_ollama_is_unreachable(self, tmp_path: Path):
@@ -688,8 +688,8 @@ class TestCheckOllama:
             json.dumps(
                 {
                     "query_planner": {
-                        "provider": "litellm",
-                        "model": "ollama/guoxuter/ov_intent_analysis_sft:v4_q8",
+                        "provider": "openai",
+                        "model": "guoxuter/ov_intent_analysis_sft:v4_q8",
                         "api_base": "http://localhost:11434",
                     }
                 }

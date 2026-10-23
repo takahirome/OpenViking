@@ -12,6 +12,7 @@ class RetiredProviderTest(unittest.TestCase):
             ("openviking/models/vlm/backends/litellm_vlm.py", "LiteLLMVLMProvider"),
             ("openviking/models/embedder/litellm_embedders.py", "LiteLLMDenseEmbedder"),
             ("openviking/models/rerank/litellm_rerank.py", "LiteLLMRerankClient"),
+            ("bot/vikingbot/providers/litellm_provider.py", "LiteLLMProvider"),
         ]:
             with self.subTest(provider=name):
                 spec = importlib.util.spec_from_file_location("retired_provider", ROOT / path)
@@ -19,6 +20,9 @@ class RetiredProviderTest(unittest.TestCase):
                 spec.loader.exec_module(module)
                 with self.assertRaisesRegex(ValueError, "retired"):
                     getattr(module, name)(model="legacy")
+                if name == "LiteLLMRerankClient":
+                    with self.assertRaisesRegex(ValueError, "retired"):
+                        module.LiteLLMRerankClient.from_config(None)
                 self.assertNotIn("litellm", sys.modules)
 
 if __name__ == "__main__":

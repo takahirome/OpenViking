@@ -6,7 +6,6 @@ from pydantic import ValidationError
 
 from vikingbot.config.loader import _merge_vlm_model_config
 from vikingbot.config.schema import AgentsConfig
-from vikingbot.providers.litellm_provider import LiteLLMProvider
 
 
 def _chat_response(content: str = "ok"):
@@ -57,26 +56,6 @@ def test_bot_agents_timeout_overrides_vlm_timeout():
     assert bot_data["agents"]["timeout"] == 45.0
 
 
-@pytest.mark.asyncio
-async def test_litellm_provider_passes_timeout_to_chat_request(monkeypatch):
-    captured = {}
-
-    async def fake_acompletion(**kwargs):
-        captured.update(kwargs)
-        return _chat_response()
-
-    monkeypatch.setattr("vikingbot.providers.litellm_provider.acompletion", fake_acompletion)
-
-    provider = LiteLLMProvider(
-        api_key="sk-test",
-        api_base="https://example.invalid",
-        default_model="openai/gpt-4o-mini",
-        timeout=75.0,
-    )
-    response = await provider.chat(messages=[{"role": "user", "content": "hi"}])
-
-    assert response.content == "ok"
-    assert captured["timeout"] == 75.0
 
 
 def test_volcengine_vlm_passes_timeout_to_sync_client():

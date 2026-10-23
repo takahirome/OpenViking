@@ -6,3 +6,7 @@
 class LiteLLMRerankClient:
     def __init__(self, *args, **kwargs):
         raise ValueError("LiteLLM support was retired; configure a supported direct provider.")
+
+    @classmethod
+    def from_config(cls, config):
+        raise ValueError("LiteLLM support was retired; configure a supported direct provider.")

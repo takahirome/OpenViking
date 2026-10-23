@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 import pytest
 
 from openviking.models.vlm import MultiCredentialVLM
-from openviking.models.vlm.backends.litellm_vlm import LiteLLMVLMProvider
 from vikingbot.config import loader
 from vikingbot.config.schema import Config
 from vikingbot.providers.vlm_adapter import VLMProviderAdapter
@@ -343,11 +342,8 @@ def test_explicit_litellm_provider_uses_vlm_adapter(tmp_path, monkeypatch):
 
     from vikingbot.cli.commands import _make_provider
 
-    provider = _make_provider(config)
-
-    assert isinstance(provider, VLMProviderAdapter)
-    assert isinstance(provider._vlm, LiteLLMVLMProvider)
-    assert provider._vlm.model == "openrouter/openai/gpt-4o-mini"
+    with pytest.raises(ValueError, match="retired"):
+        _make_provider(config)
 
 
 def test_bot_model_without_provider_rejects_legacy_fallback(tmp_path, monkeypatch):
@@ -366,7 +362,7 @@ def test_bot_model_without_provider_rejects_legacy_fallback(tmp_path, monkeypatc
 
     from vikingbot.cli.commands import _make_provider
 
-    with pytest.raises(RuntimeError, match="Set provider to 'litellm'"):
+    with pytest.raises(RuntimeError, match="supported direct VLM provider"):
         _make_provider(config)
 
 

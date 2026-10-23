@@ -141,13 +141,12 @@ class TestConfigBuilding:
         assert dense["api_base"] == "http://localhost:11434/v1"
 
         vlm_cfg = config["vlm"]
-        assert vlm_cfg["provider"] == "litellm"
-        assert vlm_cfg["model"] == "ollama/qwen3.5:4b"
+        assert vlm_cfg["provider"] == "openai"
+        assert vlm_cfg["model"] == "qwen3.5:4b"
         assert vlm_cfg["api_key"] == "no-key"
-        assert vlm_cfg["api_base"] == "http://localhost:11434"
-        # Ollama needs a larger context window (default 4096 truncates OV's
-        # ~5k-token extraction prompt) and thinking disabled.
-        assert vlm_cfg["extra_request_body"] == {"num_ctx": 16384, "think": False}
+        assert vlm_cfg["api_base"] == "http://localhost:11434/v1"
+        # Configure the context window on the Ollama model; disable thinking.
+        assert vlm_cfg["extra_request_body"] == {"think": False}
 
     def test_prompt_required_input_uses_default_on_empty(self):
         with patch("builtins.input", return_value=""):
@@ -180,11 +179,11 @@ class TestQueryPlanner:
     def test_build_query_planner_config_structure(self):
         preset = QUERY_PLANNER_PRESETS[0]  # v4_q8
         config = _build_query_planner_config(preset)
-        assert config["provider"] == "litellm"
-        assert config["model"] == preset.litellm_model
-        assert config["model"].startswith("ollama/")
-        # litellm Ollama base URL must not carry the /v1 suffix
-        assert config["api_base"] == "http://localhost:11434"
+        assert config["provider"] == "openai"
+        assert config["model"] == preset.litellm_model.removeprefix("ollama/")
+        assert not config["model"].startswith("ollama/")
+        # Direct Ollama OpenAI-compatible endpoint includes /v1
+        assert config["api_base"] == "http://localhost:11434/v1"
         assert config["temperature"] == 0.0
         assert config["extra_request_body"] == {"think": False}
 
@@ -206,8 +205,8 @@ class TestQueryPlanner:
         ):
             _wizard_query_planner(config_dict, ollama_running=True)
 
-        assert config_dict["query_planner"]["model"] == QUERY_PLANNER_PRESETS[0].litellm_model
-        assert config_dict["query_planner"]["api_base"] == "http://localhost:11434"
+        assert config_dict["query_planner"]["model"] == QUERY_PLANNER_PRESETS[0].litellm_model.removeprefix("ollama/")
+        assert config_dict["query_planner"]["api_base"] == "http://localhost:11434/v1"
         assert "prompts" not in config_dict
         assert not (config_path.parent / "prompts").exists()
 
@@ -272,7 +271,7 @@ class TestQueryPlanner:
             _wizard_query_planner(config_dict, ollama_running=None)
 
         mock_ensure.assert_called_once()
-        assert config_dict["query_planner"]["model"] == QUERY_PLANNER_PRESETS[0].litellm_model
+        assert config_dict["query_planner"]["model"] == QUERY_PLANNER_PRESETS[0].litellm_model.removeprefix("ollama/")
 
     def test_wizard_ollama_vlm_defaults_to_yes_with_recommend(self, tmp_path):
         # With an Ollama VLM present (ollama_running is not None) the planner is
@@ -290,7 +289,7 @@ class TestQueryPlanner:
         enable_call = mock_confirm.call_args_list[0]
         assert enable_call.kwargs.get("default") is True
         assert "(recommended)" in enable_call.args[0]
-        assert config_dict["query_planner"]["model"] == QUERY_PLANNER_PRESETS[0].litellm_model
+        assert config_dict["query_planner"]["model"] == QUERY_PLANNER_PRESETS[0].litellm_model.removeprefix("ollama/")
 
 
 # ---------------------------------------------------------------------------
@@ -844,8 +843,8 @@ class TestRecommendedOllamaSetup:
         assert config is not None
         # 16 GB RAM tier: qwen3-embedding:0.6b + qwen3.5:4b
         assert config["embedding"]["dense"]["model"] == "qwen3-embedding:0.6b"
-        assert config["vlm"]["model"] == "ollama/qwen3.5:4b"
-        assert config["query_planner"]["model"] == QUERY_PLANNER_PRESETS[0].litellm_model
+        assert config["vlm"]["model"] == "qwen3.5:4b"
+        assert config["query_planner"]["model"] == QUERY_PLANNER_PRESETS[0].litellm_model.removeprefix("ollama/")
 
     def test_decline_falls_back_to_per_model_selection(self):
         with (
