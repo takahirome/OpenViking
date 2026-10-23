@@ -1,5 +1,7 @@
 # Configuration
 
+The direct Ollama wizard uses its OpenAI-compatible `/v1` endpoint. Configure the context window in Ollama model settings. The current doctor auto-detection covers the default port `11434`; verify a custom-port OpenAI-compatible Ollama endpoint separately.
+
 OpenViking uses a JSON configuration file (`~/.openviking/ov.conf`) for settings.
 
 For a first-time setup, the recommended flow is:

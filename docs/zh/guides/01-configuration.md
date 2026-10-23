@@ -2,6 +2,8 @@
 
 # 配置
 
+当前 doctor 自动识别默认端口 `11434` 的 OpenAI 兼容 Ollama 端点。使用自定义端口时需单独验证连接；模型上下文窗口在 Ollama 模型设置中配置。
+
 OpenViking 使用 JSON 配置文件（`ov.conf`）进行设置。配置文件支持 Embedding、VLM、Rerank、存储、解析器等多个模块的配置。
 
 首次配置推荐优先使用：

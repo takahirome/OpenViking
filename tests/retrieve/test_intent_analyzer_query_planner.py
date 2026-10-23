@@ -60,6 +60,10 @@ def test_openviking_config_uses_vlm_when_query_planner_is_absent_or_empty():
 
 
 def test_query_planner_prompt_mapping_defaults_for_unknown_models():
+    for version in ("v4", "v7"):
+        assert intent_module.resolve_intent_analysis_prompt_id(
+            SimpleNamespace(model=f"guoxuter/ov_intent_analysis_sft:{version}_q8")
+        ) == f"retrieval.ov_intent_analysis_sft_{version}"
     assert (
         intent_module.resolve_intent_analysis_prompt_id(
             SimpleNamespace(model="ollama/guoxuter/ov_intent_analysis_sft:v7_q8")
